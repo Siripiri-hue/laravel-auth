@@ -27,7 +27,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.posts.create');
     }
 
     /**
@@ -38,7 +38,19 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'title' => 'required|unique:posts|max:50',
+            'content' => 'required|min:50',
+            'published_at' => 'nullable|before_or_equal:today',
+        ]);
+
+        $data = $request->all();
+        $newPost = new Post();
+        $newPost->fill($data);
+        $newPost->slug = Str::slug($newPost->title);
+        $newPost->save();
+        
+        return redirect()->route('admin.posts.index');
     }
 
     /**
@@ -60,7 +72,8 @@ class PostController extends Controller
      */
     public function edit($id)
     {
-        //
+        $post = Post::findOrFail($id);
+        return view('admin.posts.edit', compact('post'));
     }
 
     /**
@@ -70,9 +83,19 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Post $post)
     {
-        //
+        $data = $request->all();
+        
+        $data = $request->validate([
+            'title' => 'required|unique:posts|max:50',
+            'content' => 'required|min:50',
+            'published_at' => 'nullable|before_or_equal:today',
+        ]);
+
+        $post->update($data);
+        
+        return redirect()->route('admin.posts.index');
     }
 
     /**
@@ -81,8 +104,9 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        //
+        $post->delete();
+        return redirect()->route('admin.posts.index');
     }
 }
